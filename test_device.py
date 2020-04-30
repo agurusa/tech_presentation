@@ -30,7 +30,7 @@ def test_flashed(hydrogen):
 
 
 def test_LEDs(hydrogen):
-    LEDs = hydrogen.get_LEDs()
+    LEDs = hydrogen.get_LEDs()  # solicit the user
     assert LEDs[specs.BOARD] == specs.GREEN
     assert LEDs[specs.CONVERTER] == specs.GREEN
 
@@ -38,7 +38,7 @@ def test_LEDs(hydrogen):
 def test_pow_generated(hydrogen):
     now = datetime.datetime.now()
     end = now + datetime.timedelta(0, TEST_TIME)
-    thread = start_drill(hydrogen)
+    thread = start_drill(hydrogen)  # user begins spinning the generator
     power_readings = []
     delay = 1  # seconds
     while now < end:
@@ -66,9 +66,6 @@ def run_drill(_hydrogen):
         now = datetime.datetime.now()
 
 
-def stop_drill(hg):
-    pass
-
-
 def test_off(hydrogen):
-    pass
+    hydrogen.turn_off()
+    assert hydrogen.pow_con == 0

@@ -37,6 +37,9 @@ class HydroGen:  # CRUISING300, 200 MM
     def turn_on(self):
         self.pow_con = specs.POWER_CONSUMED
 
+    def turn_off(self):
+        self.pow_con = 0
+
     def generate(self, RPM):  # calculates generated power based on RPM
         if not RPM:
             reading = Reading(0, dt.datetime.now())

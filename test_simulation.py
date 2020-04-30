@@ -28,6 +28,12 @@ def test_power_on(simulation):
     assert simulation.pow_con == specs.POWER_CONSUMED
 
 
+def test_power_off(simulation):
+    simulation.turn_on()
+    simulation.turn_off()
+    assert simulation.pow_con == 0
+
+
 def test_conversion(simulation):
     av_speed = 5.7  # knots
     rpm = simulation.knots_to_rpm(av_speed)
