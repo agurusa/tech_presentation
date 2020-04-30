@@ -1,10 +1,13 @@
 import pytest
-from simulation import HydroGen
+import simulation as sim
 
+# watt & sea test constants
+AV_SPEED = 5.7  # knots
+AV_POW = 80  # W
 
 @pytest.fixture
 def hydrogen():
-    return HydroGen()
+    return sim.HydroGen()
 
 
 def test_conversion(hydrogen):
@@ -14,9 +17,24 @@ def test_conversion(hydrogen):
     assert (av_speed == knots)
 
 
+def test_get_pow(hydrogen):
+    with pytest.raises(Exception) as exc:
+        hydrogen.get_pow(sim.MAX + 1)
+        assert sim.EXCEPT_MAXTIME in str(exc.value)
+
+    with pytest.raises(Exception) as exc:
+        hydrogen.get_pow(10)
+        assert sim.EXCEPT_OFF in str(exc.value)
+
+    first_reading = hydrogen.generate(0)
+    assert (hydrogen.get_pow(10) == [first_reading])
+
+    rpm = hydrogen.knots_to_rpm(AV_SPEED)
+    second_reading = hydrogen.generate(rpm)
+    assert (hydrogen.get_pow(10) == [first_reading, second_reading])
+
+
 def test_generate(hydrogen):
-    av_speed = 5.7  # knots
-    av_pow = 80  # W
-    rpm = hydrogen.knots_to_rpm(av_speed)
-    hydrogen.generate(rpm)
-    assert (hydrogen.pow_gen[-1].power == pytest.approx(av_pow, rel=0.5))
+    rpm = hydrogen.knots_to_rpm(AV_SPEED)
+    reading = hydrogen.generate(rpm)
+    assert (reading.power == pytest.approx(AV_POW, rel=0.5))
