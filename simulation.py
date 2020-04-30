@@ -1,5 +1,5 @@
 from numpy.polynomial import polynomial as poly
-from datetime import datetime as dt
+import datetime as dt
 
 KNOT = 0.5144  # meters/second  # 80 W at 5.7 Knots
 PI = 3.14
@@ -23,14 +23,14 @@ class HydroGen:  # CRUISING 300, 200 MM
     def generate(self, RPM):  # calculates generated power based on RPM
         knots = self.rpm_to_knots(RPM)
         ffit = poly.polyval(knots, self.coefs)
-        self.record(ffit, dt.now())
+        self.record(ffit, dt.datetime.now())
 
     def record(self, power, timestamp):  # records the last 1 min of generated power
         if self.pow_gen:
-            if timestamp - self.pow_gen[0].timestamp < MAX:
+            if timestamp - self.pow_gen[0].timestamp < dt.timedelta(0, MAX):
                 self.pow_gen.append(Reading(power, timestamp))
             else:
-                while self.pow_gen and (timestamp - self.pow_gen[0].timestamp >= MAX):
+                while self.pow_gen and (timestamp - self.pow_gen[0].timestamp >= dt.timedelta(0, MAX)):
                     del self.pow_gen[0]
                 self.pow_gen.append(Reading(power, timestamp))
         else:
