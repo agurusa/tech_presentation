@@ -11,6 +11,7 @@ Y = [113.2, 71.7, 47.7, 33.9]  # W generated
 COEFFS = poly.polyfit(X, Y, 2)  # fit quadratic to W&S chart
 PROPELLER = 200  # mm diameter
 POWER_CONSUMED = 2.5  # W, av pow consumed when idle
+MAX_BATT_LEVEL = 75  # % of full battery power. will not generate power if batts are above this amount
 
 # LED info
 RED = 'red'

@@ -56,6 +56,11 @@ def test_get_pow(simulation):
     rpm = simulation.knots_to_rpm(AV_SPEED)
     second_reading = simulation.generate(rpm)
     assert simulation.get_pow(10) == [first_reading, second_reading]
+    assert second_reading.power == 0
+
+    simulation.battery.set_power(specs.MAX_BATT_LEVEL - 1)
+    third_reading = simulation.generate(rpm)
+    assert third_reading.power > 0
 
 
 def test_set_LEDs(simulation):
@@ -78,5 +83,9 @@ def test_set_LEDs(simulation):
 
 def test_generate(simulation):
     rpm = simulation.knots_to_rpm(AV_SPEED)
+    reading = simulation.generate(rpm)
+    assert reading.power == 0
+
+    simulation.battery.power = specs.MAX_BATT_LEVEL - 1
     reading = simulation.generate(rpm)
     assert reading.power == pytest.approx(AV_POW, rel=0.5)

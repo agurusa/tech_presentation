@@ -17,6 +17,7 @@ def hydrogen():
     DUT = HydroGen()  # device under test
     DUT.flash()
     DUT.turn_on()
+    DUT.battery.set_power(specs.MAX_BATT_LEVEL)
     return DUT
 
 
@@ -51,7 +52,7 @@ def test_pow_generated(hydrogen):
 
 
 def start_drill(_hydrogen):
-    thread = Thread(target=run_drill, args=(_hydrogen,))
+    thread = Thread(target=run_drill, args=(_hydrogen,), daemon=True)
     thread.start()
     return thread
 

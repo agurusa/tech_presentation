@@ -1,5 +1,7 @@
 from numpy.polynomial import polynomial as poly
 import datetime as dt
+from time import sleep
+from threading import Thread
 
 import specs
 
@@ -12,6 +14,21 @@ EXCEPT_MAXTIME = 'Simulation does not record more than 60 seconds worth of data.
 EXCEPT_OFF = 'Simulation is not "Powered on."'
 EXCEPT_COLOR = f'Simulation does not support colors other than {specs.RED} OR {specs.GREEN}'
 EXCEPT_LOC = f'Simulation does not support LED locations other than {specs.BOARD} or {specs.CONVERTER}'
+
+
+class Battery:
+    def __init__(self):
+        self.power = 100  # percent
+        thread = Thread(target=self.degrade, daemon=True)
+        thread.start()
+
+    def degrade(self):
+        while True:
+            self.power -= 1
+            sleep(1)
+
+    def set_power(self, pow):
+        self.power = pow
 
 
 class Reading:  # defines the structure used to record power generated
@@ -27,6 +44,7 @@ class HydroGen:  # CRUISING300, 200 MM
         self.LEDS = {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}  # must be flashed
         self.can_address = 0  # must be flashed
         self.firmware_version = 0  # must be flashed
+        self.battery = Battery()
 
     def flash(self):
         self.can_address = specs.CAN_ADDRESS
@@ -42,6 +60,8 @@ class HydroGen:  # CRUISING300, 200 MM
 
     def generate(self, RPM):  # calculates generated power based on RPM
         if not RPM:
+            reading = Reading(0, dt.datetime.now())
+        elif self.battery.power >= specs.MAX_BATT_LEVEL:
             reading = Reading(0, dt.datetime.now())
         else:
             knots = self.rpm_to_knots(RPM)
