@@ -4,7 +4,6 @@ import datetime as dt
 # conversion constants
 KNOT = 0.5144  # meters/second  # 80 W at 5.7 Knots
 PI = 3.14
-MAX = 60  # store a max of 60 seconds of power readings
 
 # LED info
 RED = 'red'
@@ -23,6 +22,12 @@ X = [6.4, 5.5, 4.9, 4.4]  # knots
 Y = [113.2, 71.7, 47.7, 33.9]  # W generated
 COEFFS = poly.polyfit(X, Y, 2)  # fit quadratic to W&S chart
 PROPELLER = 200  # mm diameter
+POWER_CONSUMED = 2.5  # W, av pow consumed when idle
+
+# Config specs
+MAX = 60  # store a max of 60 seconds of power readings
+CAN_ADDRESS = 57
+FIRMWARE_VERSION = 4.2
 
 
 class Reading:  # defines the structure used to record power generated
@@ -34,10 +39,19 @@ class Reading:  # defines the structure used to record power generated
 class HydroGen:  # CRUISING300, 200 MM
     def __init__(self):
         self.pow_gen = []  # holds the last 1 minute of Readings
-        self.LEDS = {BOARD: GREEN, CONVERTER: GREEN}  # assume LEDs indicate proper setup
+        self.pow_con = 0 # W, represents power consumed
+        self.LEDS = {BOARD: RED, CONVERTER: RED}  # must be flashed
+        self.can_address = 0  # must be flashed
+        self.firmware_version = 0  # must be flashed
+
+    def flash(self):
+        self.can_address = CAN_ADDRESS
+        self.firmware_version = FIRMWARE_VERSION
+        self.LEDS[BOARD] = GREEN
+        self.LEDS[CONVERTER] = GREEN
 
     def turn_on(self):
-        pass
+        self.pow_con = POWER_CONSUMED
 
     def generate(self, RPM):  # calculates generated power based on RPM
         if not RPM:
@@ -77,10 +91,8 @@ class HydroGen:  # CRUISING300, 200 MM
             raise Exception(EXCEPT_LOC)
         self.LEDS[loc] = color
 
-    def get_LED(self, loc):
-        if loc is not BOARD and loc is not CONVERTER:
-            raise Exception(EXCEPT_LOC)
-        return self.LEDS[loc]
+    def get_LEDs(self):
+        return self.LEDS
 
     def rpm_to_knots(self, RPM):
         meters_per_rotation = (PROPELLER / 1000) * PI
