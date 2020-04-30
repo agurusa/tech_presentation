@@ -1,15 +1,15 @@
 import pytest
-from simulation import HydroGen, RED, GREEN, BOARD, CONVERTER, CAN_ADDRESS, FIRMWARE_VERSION, POWER_CONSUMED
 import datetime
 from time import sleep
 import statistics
 from threading import Thread
 
+from simulation import HydroGen
+import specs
+
 RPM = 200  # standard RPM acquired by shop drill
 TEST_TIME = 10  # seconds to run the drill
-POW_SUCCESS = 20  # must generate at least 30 W to be acceptable
-
-COLOR_DICT = {'R': RED, 'G': GREEN}
+POW_SUCCESS = 20  # must generate at least this much power to be acceptable
 
 
 @pytest.fixture(scope="module")
@@ -21,20 +21,18 @@ def hydrogen():
 
 
 def test_on(hydrogen):
-    assert hydrogen.pow_con == POWER_CONSUMED
+    assert hydrogen.pow_con == specs.POWER_CONSUMED
 
 
 def test_flashed(hydrogen):
-    assert hydrogen.can_address == CAN_ADDRESS
-    assert hydrogen.firmware_version == FIRMWARE_VERSION
+    assert hydrogen.can_address == specs.CAN_ADDRESS
+    assert hydrogen.firmware_version == specs.FIRMWARE_VERSION
 
 
 def test_LEDs(hydrogen):
-    # color_board = solicit_LED(hydrogen, BOARD)
-    # color_converter = solicit_LED(hydrogen, CONVERTER)
     LEDs = hydrogen.get_LEDs()
-    assert LEDs[BOARD] == GREEN
-    assert LEDs[CONVERTER] == GREEN
+    assert LEDs[specs.BOARD] == specs.GREEN
+    assert LEDs[specs.CONVERTER] == specs.GREEN
 
 
 def test_pow_generated(hydrogen):
