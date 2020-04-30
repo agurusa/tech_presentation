@@ -5,6 +5,7 @@ import simulation as sim
 AV_SPEED = 5.7  # knots
 AV_POW = 80  # W
 
+
 @pytest.fixture
 def hydrogen():
     return sim.HydroGen()
@@ -32,6 +33,22 @@ def test_get_pow(hydrogen):
     rpm = hydrogen.knots_to_rpm(AV_SPEED)
     second_reading = hydrogen.generate(rpm)
     assert (hydrogen.get_pow(10) == [first_reading, second_reading])
+
+
+def test_set_LEDs(hydrogen):
+    with pytest.raises(Exception) as exc:
+        hydrogen.set_LED('blue', sim.CONVERTER)
+        assert sim.EXCEPT_COLOR in str(exc.value)
+
+    with pytest.raises(Exception) as exc:
+        hydrogen.set_LED(sim.GREEN, 'hull_computer')
+        assert sim.EXCEPT_LOC in str(exc.value)
+
+    hydrogen.set_LED(sim.RED, sim.BOARD)
+    assert (hydrogen.get_LED(sim.BOARD) == sim.RED)
+
+    hydrogen.set_LED(sim.GREEN, sim.CONVERTER)
+    assert (hydrogen.get_LED(sim.CONVERTER) == sim.GREEN)
 
 
 def test_generate(hydrogen):
