@@ -20,5 +20,5 @@ def test_device(hydrogen):
         hydrogen.generate(RPM)
         sleep(1)
         now = datetime.datetime.now()
-    power_reading = statistics.mean((p.power for p in hydrogen.pow_gen[-TEST_TIME:]))
+    power_reading = statistics.mean((p.power for p in hydrogen.get_pow(TEST_TIME)))
     assert(power_reading >= POW_SUCCESS)
