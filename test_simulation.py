@@ -16,10 +16,16 @@ def test_flash(simulation):
     assert simulation.firmware_version == 0
     assert simulation.can_address == 0
     assert simulation.LEDS == {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}
+
+    simulation.manufacture_version = specs.OLD
     simulation.flash()
-    assert simulation.firmware_version == specs.FIRMWARE_VERSION
+    assert simulation.firmware_version == specs.VERSION_PROP[specs.OLD]
     assert simulation.can_address == specs.CAN_ADDRESS
     assert simulation.LEDS == {specs.BOARD: specs.GREEN, specs.CONVERTER: specs.GREEN}
+
+    simulation.manufacture_version = specs.NEW
+    simulation.flash()
+    assert simulation.firmware_version == specs.VERSION_PROP[specs.NEW]
 
 
 def test_power_on(simulation):

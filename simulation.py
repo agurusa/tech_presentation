@@ -2,6 +2,7 @@ from numpy.polynomial import polynomial as poly
 import datetime as dt
 from time import sleep
 from threading import Thread
+from numpy.random import choice
 
 import specs
 
@@ -41,6 +42,7 @@ class HydroGen:  # CRUISING300, 200 MM
     def __init__(self):
         self.pow_gen = []  # holds the last 1 minute of Readings
         self.pow_con = 0  # W, represents power consumed
+        self.manufacture_version = choice(specs.VERSION_MAN, 1, p=[0.1, .9])[0]   # probability based on order date
         self.LEDS = {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}  # must be flashed
         self.can_address = 0  # must be flashed
         self.firmware_version = 0  # must be flashed
@@ -48,7 +50,7 @@ class HydroGen:  # CRUISING300, 200 MM
 
     def flash(self):
         self.can_address = specs.CAN_ADDRESS
-        self.firmware_version = specs.FIRMWARE_VERSION
+        self.firmware_version = specs.VERSION_PROP[self.manufacture_version]
         self.LEDS[specs.BOARD] = specs.GREEN
         self.LEDS[specs.CONVERTER] = specs.GREEN
 
@@ -68,10 +70,14 @@ class HydroGen:  # CRUISING300, 200 MM
             ffit = poly.polyval(knots, specs.COEFFS)
             reading = Reading(ffit, dt.datetime.now())
 
+        if self.manufacture_version == specs.NEW:
+            reading.power = reading.power * specs.FACTOR
         self.record_pow(reading)
         return reading
 
     def record_pow(self, reading):  # records the last 1 min of generated power
+        if self.manufacture_version == specs.NEW:
+            reading.power = reading.power / specs.FACTOR
         if self.pow_gen:
             if reading.timestamp - self.pow_gen[0].timestamp < dt.timedelta(0, specs.MAX):
                 self.pow_gen.append(reading)
