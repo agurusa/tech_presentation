@@ -1,9 +1,35 @@
 from numpy.polynomial import polynomial as poly
 import datetime as dt
+from time import sleep
+from threading import Thread
+from numpy.random import choice
 
+import specs
+
+# conversion constants
 KNOT = 0.5144  # meters/second  # 80 W at 5.7 Knots
 PI = 3.14
-MAX = 60  # store a max of 60 seconds of power readings
+
+# exception strings
+EXCEPT_MAXTIME = 'Simulation does not record more than 60 seconds worth of data.'
+EXCEPT_OFF = 'Simulation has not started to spin the generator.'
+EXCEPT_COLOR = f'Simulation does not support colors other than {specs.RED} OR {specs.GREEN}'
+EXCEPT_LOC = f'Simulation does not support LED locations other than {specs.BOARD} or {specs.CONVERTER}'
+
+
+class Battery:
+    def __init__(self):
+        self.power = 100  # percent
+        thread = Thread(target=self.degrade, daemon=True)
+        thread.start()
+
+    def degrade(self):
+        while True:
+            self.power -= 1
+            sleep(1)
+
+    def set_power(self, pow):
+        self.power = pow
 
 
 class Reading:  # defines the structure used to record power generated
@@ -12,37 +38,87 @@ class Reading:  # defines the structure used to record power generated
         self.timestamp = timestamp
 
 
-class HydroGen:  # CRUISING 300, 200 MM
+class HydroGen:  # CRUISING300, 200 MM
     def __init__(self):
-        self.propeller = 200  # mm diameter
         self.pow_gen = []  # holds the last 1 minute of Readings
-        self.x = [6.4, 5.5, 4.9, 4.4]  # knots
-        self.y = [113.2, 71.7, 47.7, 33.9]  # W generated
-        self.coefs = poly.polyfit(self.x, self.y, 2)  # fit quadratic to W&S chart
+        self.pow_con = 0  # W, represents power consumed
+        self.manufacture_version = choice(specs.VERSION_MAN, 1, p=[0.1, 0.9])[0]   # probability based on order date
+        self.LEDS = {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}  # must be flashed
+        self.can_address = 0  # must be flashed
+        self.firmware_version = 0  # must be flashed
+        self.battery = Battery()
+
+    def flash(self):
+        self.can_address = specs.CAN_ADDRESS
+        self.firmware_version = specs.FIRMWARE_VERSION
+        # self.firmware_version = specs.VERSION_PROP[self.manufacture_version]
+        self.LEDS[specs.BOARD] = specs.GREEN
+        self.LEDS[specs.CONVERTER] = specs.GREEN
+
+    def turn_on(self):
+        self.pow_con = specs.POWER_CONSUMED
+
+    def turn_off(self):
+        self.pow_con = 0
 
     def generate(self, RPM):  # calculates generated power based on RPM
-        knots = self.rpm_to_knots(RPM)
-        ffit = poly.polyval(knots, self.coefs)
-        self.record(ffit, dt.datetime.now())
-
-    def record(self, power, timestamp):  # records the last 1 min of generated power
-        if self.pow_gen:
-            if timestamp - self.pow_gen[0].timestamp < dt.timedelta(0, MAX):
-                self.pow_gen.append(Reading(power, timestamp))
-            else:
-                while self.pow_gen and (timestamp - self.pow_gen[0].timestamp >= dt.timedelta(0, MAX)):
-                    del self.pow_gen[0]
-                self.pow_gen.append(Reading(power, timestamp))
+        if not RPM:
+            reading = Reading(0, dt.datetime.now())
+        elif self.battery.power >= specs.MAX_BATT_LEVEL:
+            reading = Reading(0, dt.datetime.now())
         else:
-            self.pow_gen.append(Reading(power, timestamp))
+            knots = self.rpm_to_knots(RPM)
+            ffit = poly.polyval(knots, specs.COEFFS)
+            reading = Reading(ffit, dt.datetime.now())
+
+        if self.manufacture_version == specs.NEW:
+            reading.power = reading.power * specs.FACTOR
+
+        self.record_pow(reading)
+        return reading
+
+    def record_pow(self, reading):  # records the last 1 min of generated power
+        # if self.manufacture_version == specs.NEW:
+        #     reading.power = reading.power / specs.FACTOR
+        if self.pow_gen:
+            if reading.timestamp - self.pow_gen[0].timestamp < dt.timedelta(0, specs.MAX):
+                self.pow_gen.append(reading)
+            else:
+                while self.pow_gen and (reading.timestamp - self.pow_gen[0].timestamp >= dt.timedelta(0, specs.MAX)):
+                    del self.pow_gen[0]
+                self.pow_gen.append(reading)
+        else:
+            self.pow_gen.append(reading)
+
+    def get_pow(self, seconds):  # gets the recorded Readings for the last however many seconds
+        if seconds > specs.MAX:
+            raise Exception(EXCEPT_MAXTIME)
+        if self.pow_gen:
+            if seconds == -1:
+                return [self.pow_gen[-1]]
+            else:
+                first = dt.datetime.now() - dt.timedelta(0, seconds)
+                return [r for r in self.pow_gen if r.timestamp >= first]
+        else:
+            raise Exception(EXCEPT_OFF)
+
+    def set_LED(self, color, loc):  # sets LED colors on board and converter
+        if color is not specs.RED and color is not specs.GREEN:
+            raise Exception(EXCEPT_COLOR)
+        if loc is not specs.BOARD and loc is not specs.CONVERTER:
+            raise Exception(EXCEPT_LOC)
+        self.LEDS[loc] = color
+
+    def get_LEDs(self):
+        return self.LEDS
 
     def rpm_to_knots(self, RPM):
-        meters_per_rotation = (self.propeller / 1000) * PI
+        meters_per_rotation = (specs.PROPELLER / 1000) * PI
         rotations_per_second = RPM / 60
-        _knots = 1 / KNOT * (meters_per_rotation * rotations_per_second)
-        return _knots
+        knots = 1 / KNOT * (meters_per_rotation * rotations_per_second)
+        return knots
 
     def knots_to_rpm(self, knots):
-        meters_per_rotation = (self.propeller / 1000) * PI
+        meters_per_rotation = (specs.PROPELLER / 1000) * PI
         rpm = knots * KNOT / meters_per_rotation * 60
         return rpm
