@@ -50,8 +50,8 @@ class HydroGen:  # CRUISING300, 200 MM
 
     def flash(self):
         self.can_address = specs.CAN_ADDRESS
-        self.firmware_version = specs.FIRMWARE_VERSION
-        # self.firmware_version = specs.VERSION_PROP[self.manufacture_version]
+        # self.firmware_version = specs.FIRMWARE_VERSION
+        self.firmware_version = specs.VERSION_PROP[self.manufacture_version]
         self.LEDS[specs.BOARD] = specs.GREEN
         self.LEDS[specs.CONVERTER] = specs.GREEN
 
@@ -78,8 +78,8 @@ class HydroGen:  # CRUISING300, 200 MM
         return reading
 
     def record_pow(self, reading):  # records the last 1 min of generated power
-        # if self.manufacture_version == specs.NEW:
-        #     reading.power = reading.power / specs.FACTOR
+        if self.manufacture_version == specs.NEW:
+            reading.power = reading.power / specs.FACTOR
         if self.pow_gen:
             if reading.timestamp - self.pow_gen[0].timestamp < dt.timedelta(0, specs.MAX):
                 self.pow_gen.append(reading)
