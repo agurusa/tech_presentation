@@ -12,8 +12,8 @@ def test_on(hydrogen):
 
 def test_flashed(hydrogen):
     assert hydrogen.can_address == specs.CAN_ADDRESS
-    assert hydrogen.firmware_version == specs.FIRMWARE_VERSION
-
+    # assert hydrogen.firmware_version == specs.FIRMWARE_VERSION
+    assert hydrogen.firmware_version == specs.VERSION_PROP[hydrogen.manufacture_version]
 
 def test_LEDs(hydrogen):
     LEDs = hydrogen.get_LEDs()  # solicit the user
