@@ -5,7 +5,6 @@ orbs:
 
 jobs:
   build-and-test:
-    executor: /bin/bash
     steps:
       - checkout
       - python/load-cache
