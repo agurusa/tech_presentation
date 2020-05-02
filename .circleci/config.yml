@@ -5,14 +5,14 @@ orbs:
 
 jobs:
   build-and-test:
-    executor: python/default
+    executor: /bin/bash
     steps:
       - checkout
       - python/load-cache
       - python/install-deps
       - python/save-cache
       - run:
-          command: pytest test_device.py
+          command: py.test test_device.py
           name: Test
 
 workflows:
