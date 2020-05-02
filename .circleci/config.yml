@@ -5,8 +5,7 @@ orbs:
 
 jobs:
   build-and-test:
-    machine:
-      image: ubuntu-1604:201903-01
+    executor: python/default
     steps:
       - checkout
       - python/load-cache
