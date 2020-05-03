@@ -61,6 +61,10 @@ def test_get_pow(simulation):
     second_reading = simulation.generate(rpm)
     assert simulation.get_pow(10) == [first_reading, second_reading]
 
+    simulation.set_LED(specs.RED, specs.CONVERTER)
+    _ = simulation.generate(rpm)
+    assert sim.EXCEPT_POW == simulation.get_pow(10)[-1].power
+
 
 def test_set_LEDs(simulation):
     with pytest.raises(Exception) as exc:
@@ -83,10 +87,8 @@ def test_set_LEDs(simulation):
 def test_generate(simulation):
     simulation.turn_on()
     rpm = sim.knots_to_rpm(AV_SPEED)
+    reading = simulation.generate(rpm)
     if specs.RED in simulation.get_LEDs().values():
-        with pytest.raises(Exception) as exc:
-            reading = simulation.generate(rpm)
-            assert sim.EXCEPT_POW in str(exc.value)
+        assert reading.power == -1
     else:
-        reading = simulation.generate(rpm)
         assert reading.power == pytest.approx(AV_POW, rel=0.5)
