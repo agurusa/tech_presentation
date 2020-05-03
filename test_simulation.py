@@ -13,9 +13,16 @@ def simulation():
 
 
 def test_flash(simulation):
+
+    simulation.manufacture_version = specs.OLD
     simulation.flash()
-    assert simulation.firmware_version == specs.FIRMWARE_VERSION
+    assert simulation.firmware_version == specs.VERSION_PROP[specs.OLD]
     assert simulation.can_address == specs.CAN_ADDRESS
+
+    simulation.manufacture_version = specs.NEW
+    simulation.flash()
+    assert simulation.firmware_version == specs.VERSION_PROP[specs.NEW]
+
 
 
 def test_power_on(simulation):
@@ -58,6 +65,7 @@ def test_get_pow(simulation):
     simulation.turn_on()
     simulation.set_LED(specs.GREEN, specs.CONVERTER)
     simulation.set_LED(specs.GREEN, specs.BOARD)
+    simulation.battery.set_power(specs.MAX_BATT_LEVEL - 1)
 
     first_reading = simulation.generate(0)
     assert simulation.get_pow(10) == [first_reading]
@@ -88,7 +96,7 @@ def test_set_LEDs(simulation):
     LEDs = simulation.get_LEDs()
     assert LEDs[specs.CONVERTER] == specs.GREEN
 
-
+    
 def test_generate_red_LED(simulation):
     simulation.turn_on()
     simulation.set_LED(specs.RED, specs.CONVERTER)
@@ -118,4 +126,3 @@ def test_generate_green_and_low(simulation):
     rpm = simulation.knots_to_rpm(AV_SPEED)
     reading = simulation.generate(rpm)
     assert reading.power == pytest.approx(AV_POW, rel=0.5)
-

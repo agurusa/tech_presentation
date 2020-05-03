@@ -3,7 +3,13 @@ from numpy.polynomial import polynomial as poly
 # Config specs
 MAX = 60  # store a max of 60 seconds of power readings
 CAN_ADDRESS = 57
-FIRMWARE_VERSION = 4.2
+
+# preloaded firmware versions
+OLD = 2.11
+NEW = 2.12
+VERSION_MAN = [OLD, NEW]  # manufacturer possibilities
+VERSION_PROP = {OLD: 4.2, NEW: 4.3}  # proprietary firmware version association
+FACTOR = 0.001  # ratio difference between old and new firmware
 
 # Manufacturer specs
 X = [6.4, 5.5, 4.9, 4.4]  # knots
