@@ -33,6 +33,11 @@ def test_power_off(simulation):
     simulation.turn_off()
     assert simulation.pow_con == 0
 
+def test_power_off(simulation):
+    simulation.turn_on()
+    simulation.turn_off()
+    assert simulation.pow_con == 0
+
 
 def test_conversion():
     av_speed = 5.7  # knots
@@ -84,11 +89,33 @@ def test_set_LEDs(simulation):
     assert LEDs[specs.CONVERTER] == specs.GREEN
 
 
-def test_generate(simulation):
+def test_generate_red_LED(simulation):
     simulation.turn_on()
-    rpm = sim.knots_to_rpm(AV_SPEED)
+    simulation.set_LED(specs.RED, specs.CONVERTER)
+    simulation.set_LED(specs.GREEN, specs.BOARD)
+    rpm = simulation.knots_to_rpm(AV_SPEED)
+    reading1 = simulation.generate(rpm)
+    assert reading1.power == -1
+    
+    simulation.set_LED(specs.RED, specs.BOARD)
+    rpm = simulation.knots_to_rpm(AV_SPEED)
+    reading2 = simulation.generate(rpm)
+    assert reading2.power == -1
+    
+def test_generate_high_bat(simulation):
+    simulation.turn_on()
+    simulation.set_LED(specs.GREEN, specs.CONVERTER)
+    simulation.set_LED(specs.GREEN, specs.BOARD)
+    rpm = simulation.knots_to_rpm(AV_SPEED)
     reading = simulation.generate(rpm)
-    if specs.RED in simulation.get_LEDs().values():
-        assert reading.power == -1
-    else:
-        assert reading.power == pytest.approx(AV_POW, rel=0.5)
+    assert reading.power == 0
+    
+def test_generate_green_and_low(simulation):
+    simulation.turn_on()
+    simulation.set_LED(specs.GREEN, specs.CONVERTER)
+    simulation.set_LED(specs.GREEN, specs.BOARD)
+    simulation.battery.power = specs.MAX_BATT_LEVEL - 1
+    rpm = simulation.knots_to_rpm(AV_SPEED)
+    reading = simulation.generate(rpm)
+    assert reading.power == pytest.approx(AV_POW, rel=0.5)
+

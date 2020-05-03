@@ -17,6 +17,7 @@ def hydrogen():
     DUT = sim.HydroGen()  # device under test
     DUT.flash()
     DUT.turn_on()
+    DUT.battery.set_power(specs.MAX_BATT_LEVEL)  # set voltage level of external power source
     return DUT
 
 

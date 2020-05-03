@@ -1,6 +1,9 @@
 from numpy.polynomial import polynomial as poly
 import datetime as dt
+from time import sleep
+from threading import Thread
 from random import choice
+
 import specs
 
 # conversion constants
@@ -14,6 +17,20 @@ EXCEPT_COLOR = f'Simulation does not support colors other than {specs.RED} OR {s
 EXCEPT_LOC = f'Simulation does not support LED locations other than {specs.BOARD} or {specs.CONVERTER}'
 EXCEPT_POW = 'Power reading cannot be parsed'
 EXCEPT_GEN = 'No readings have yet been generated.'
+
+class Battery:
+    def __init__(self):
+        self.power = 100  # percent
+        thread = Thread(target=self.degrade, daemon=True)
+        thread.start()
+
+    def degrade(self):
+        while True:
+            self.power -= 1
+            sleep(1)
+
+    def set_power(self, pow):
+        self.power = pow
 
 
 # Conversions
@@ -39,14 +56,17 @@ class Reading:
 
 # CRUISING300, 200 MM
 class HydroGen:
+
     def __init__(self):
         self.pow_gen = []  # holds the last 1 minute of Readings
         self.pow_con = 0  # W, represents power consumed
         self.LEDS = {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}  # must be flashed
         self.can_address = 0  # must be flashed
         self.firmware_version = 0  # must be flashed
+        self.battery = Battery()
         self.voltage_spike = choice([True, False])
         self.voltage_oscillation = choice([True, False])
+
 
     def flash(self):
         self.can_address = specs.CAN_ADDRESS
@@ -67,6 +87,8 @@ class HydroGen:
         if specs.RED in self.LEDS.values():
             reading = Reading(-1, dt.datetime.now())
         elif not RPM:
+            reading = Reading(0, dt.datetime.now())
+        elif self.battery.power >= specs.MAX_BATT_LEVEL:
             reading = Reading(0, dt.datetime.now())
         else:
             knots = rpm_to_knots(RPM)
