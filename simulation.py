@@ -64,7 +64,7 @@ class HydroGen:
         if not self.pow_con:
             raise Exception(EXCEPT_OFF)
 
-        if specs.RED in self.LEDS[specs.CONVERTER]:
+        if specs.RED in self.LEDS.values():
             reading = Reading(-1, dt.datetime.now())
         elif not RPM:
             reading = Reading(0, dt.datetime.now())
@@ -77,9 +77,6 @@ class HydroGen:
         return reading
 
     def record_pow(self, reading):  # records the last 1 min of generated power
-        if reading.power < 0 or specs.RED in self.LEDS[specs.BOARD]:
-            raise Exception(EXCEPT_POW)
-
         if self.pow_gen:
             if reading.timestamp - self.pow_gen[0].timestamp < dt.timedelta(0, specs.MAX):
                 self.pow_gen.append(reading)
@@ -93,11 +90,11 @@ class HydroGen:
     def get_pow(self, seconds):  # gets the recorded Readings for the last however many seconds
         if seconds > specs.MAX:
             raise Exception(EXCEPT_MAXTIME)
-        if self.pow_gen:
-            first = dt.datetime.now() - dt.timedelta(0, seconds)
-            return [r for r in self.pow_gen if r.timestamp >= first]
-        else:
-            raise Exception(EXCEPT_GEN)
+
+        first = dt.datetime.now() - dt.timedelta(0, seconds)
+        power = [r for r in self.pow_gen if r.timestamp >= first]
+        if -1 in power:
+            raise Exception(EXCEPT_POW)
 
     def set_LED(self, color, loc):  # sets LED colors on board and converter
         if color is not specs.RED and color is not specs.GREEN:
