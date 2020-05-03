@@ -4,7 +4,7 @@ from time import sleep
 import statistics
 from threading import Thread
 
-from simulation import HydroGen
+import simulation as sim
 import specs
 
 RPM = 200  # standard RPM acquired by shop drill
@@ -14,7 +14,7 @@ POW_SUCCESS = 20  # must generate at least this much power to be acceptable
 
 @pytest.fixture(scope="module")
 def hydrogen():
-    DUT = HydroGen()  # device under test
+    DUT = sim.HydroGen()  # device under test
     DUT.flash()
     DUT.turn_on()
     DUT.battery.set_power(specs.MAX_BATT_LEVEL)  # set voltage level of external power source
@@ -28,6 +28,7 @@ def test_on(hydrogen):
 def test_flashed(hydrogen):
     assert hydrogen.can_address == specs.CAN_ADDRESS
     assert hydrogen.firmware_version == specs.VERSION_PROP[hydrogen.manufacture_version]
+
 
 
 def test_LEDs(hydrogen):
@@ -47,12 +48,15 @@ def test_pow_generated(hydrogen):
         power_readings += [p.power for p in hydrogen.get_pow(delay)]
         now = datetime.datetime.now()
     thread.join()
-    av_pow = statistics.mean(power_readings)
-    assert (av_pow >= POW_SUCCESS)
+    if sim.EXCEPT_POW in power_readings:
+        assert pytest.fail(sim.EXCEPT_POW)
+    else:
+        av_pow = statistics.mean(power_readings)
+        assert (av_pow >= POW_SUCCESS)
 
 
 def start_drill(_hydrogen):
-    thread = Thread(target=run_drill, args=(_hydrogen,), daemon=True)
+    thread = Thread(target=run_drill, args=(_hydrogen,))
     thread.start()
     return thread
 
