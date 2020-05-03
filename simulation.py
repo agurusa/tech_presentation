@@ -92,9 +92,14 @@ class HydroGen:
             raise Exception(EXCEPT_MAXTIME)
 
         first = dt.datetime.now() - dt.timedelta(0, seconds)
-        power = [r for r in self.pow_gen if r.timestamp >= first]
-        if -1 in power:
-            raise Exception(EXCEPT_POW)
+        return list(map(lambda pow: self.parse(pow), [r for r in self.pow_gen if r.timestamp >= first]))
+
+
+    def parse(self, power):
+        if power == -1:
+            return EXCEPT_POW
+        else:
+            return power
 
     def set_LED(self, color, loc):  # sets LED colors on board and converter
         if color is not specs.RED and color is not specs.GREEN:
