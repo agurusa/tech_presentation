@@ -14,7 +14,14 @@ jobs:
       - run:
           command: |
             mkdir test-results
-            python -m py.test --junitxml=test-results/junit.xml
+            python -m py.test --junitxml=test-results/junit.xml --testver=0 --testround=1
+            python -m py.test --junitxml=test-results/junit.xml --testver=0 --testround=2
+            python -m py.test --junitxml=test-results/junit.xml --testver=1 --testround=1
+            python -m py.test --junitxml=test-results/junit.xml --testver=1 --testround=2
+            python -m py.test --junitxml=test-results/junit.xml --testver=2 --testround=1
+            python -m py.test --junitxml=test-results/junit.xml --testver=2 --testround=2
+            python -m py.test --junitxml=test-results/junit.xml --testver=3 --testround=1
+            python -m py.test --junitxml=test-results/junit.xml --testver=3 --testround=2
           name: Test
 
 
