@@ -11,16 +11,6 @@ RPM = 200  # standard RPM acquired by shop drill
 TEST_TIME = 10  # seconds to run the drill
 POW_SUCCESS = 20  # must generate at least this much power to be acceptable
 
-
-@pytest.fixture(scope="module")
-def hydrogen():
-    DUT = sim.HydroGen()  # device under test
-    DUT.flash()
-    DUT.turn_on()
-    DUT.battery.set_power(specs.MAX_BATT_LEVEL)  # set voltage level of external power source
-    return DUT
-
-
 def test_on(hydrogen):
     assert hydrogen.pow_con == specs.POWER_CONSUMED
 
