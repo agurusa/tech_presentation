@@ -101,7 +101,7 @@ class HydroGen:
         if seconds > specs.MAX:
             raise Exception(EXCEPT_MAXTIME)
         if seconds == -1:
-            return [self.pow_gen[-1]]
+            return [self.parse_power(self.pow_gen[-1])]
         else:
             first = dt.datetime.now() - dt.timedelta(0, seconds)
             return [self.parse_power(r) for r in self.pow_gen if r.timestamp >= first]
