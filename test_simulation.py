@@ -13,7 +13,6 @@ def simulation():
 
 
 def test_flash(simulation):
-
     simulation.manufacture_version = specs.OLD
     simulation.flash(firmware_change=True)
     assert simulation.firmware_version == specs.VERSION_PROP[specs.OLD]
