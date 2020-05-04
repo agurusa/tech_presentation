@@ -1,6 +1,4 @@
-import pytest
 import specs
-from random import choice
 from simulation import HydroGen
 
 NUM_SAMPLES = 100
