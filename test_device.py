@@ -1,4 +1,5 @@
 from threading import Thread
+import pytest
 import specs
 
 RPM = 200  # standard RPM acquired by shop drill
@@ -25,7 +26,10 @@ def test_pow_generated(hydrogen):
     thread = start_drill(hydrogen)  # user begins spinning the generator
     thread.join()
     av_pow = hydrogen.get_pow(-1)[0].power
-    assert (av_pow >= POW_SUCCESS)
+    if isinstance(av_pow, str):
+        pytest.fail(av_pow)
+    else:
+        assert (av_pow >= POW_SUCCESS)
 
 
 def start_drill(_hydrogen):
