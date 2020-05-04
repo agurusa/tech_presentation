@@ -24,7 +24,6 @@ def test_flash(simHG):
     assert simHG.firmware_version == specs.VERSION_PROP[specs.NEW]
 
 
-
 def test_power_on(simHG):
     simHG.turn_on()
     assert simHG.pow_con == specs.POWER_CONSUMED
@@ -33,12 +32,6 @@ def test_power_on(simHG):
 
     assert LED_converter == specs.RED if simHG.voltage_spike else LED_converter == specs.GREEN
     assert LED_board == specs.RED if simHG.voltage_oscillation else LED_board == specs.GREEN
-
-
-def test_power_off(simHG):
-    simHG.turn_on()
-    simHG.turn_off()
-    assert simHG.pow_con == 0
 
 
 def test_power_off(simHG):
@@ -68,7 +61,7 @@ def test_get_pow(simHG):
     simHG.set_LED(specs.GREEN, specs.BOARD)
     _ = simHG.generate(0)
 
-    simHG.battery.set_power(specs.MAX_BATT_LEVEL - 1)
+    simHG.battery.turn_on(specs.MAX_BATT_LEVEL - 1)
     rpm = specs.knots_to_rpm(AV_SPEED)
     _ = simHG.generate(rpm)
 

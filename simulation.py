@@ -1,7 +1,5 @@
 from numpy.polynomial import polynomial as poly
 import datetime as dt
-from time import sleep
-from threading import Thread
 from random import choice
 from numpy.random import choice as weighted
 import specs
@@ -17,24 +15,22 @@ EXCEPT_GEN = 'No readings have yet been generated.'
 
 class Battery:
     def __init__(self):
+        self.weekday = specs.MONDAY
         self.power = 100  # percent
-        thread = Thread(target=self.degrade, daemon=True)
-        thread.start()
 
-    def degrade(self):
-        while True:
-            self.power -= 1
-            sleep(1)
+    def turn_on(self, pow=None):
+        self.power = pow if pow else self.weekday
 
-    def set_power(self, pow):
-        self.power = pow
-        
-        
+    def set_weekday(self, weekday):
+        self.weekday = weekday
+
+
 # defines the structure used to record power generated
 class Reading:
     def __init__(self, power, timestamp):
         self.power = power  # W
         self.timestamp = timestamp
+
 
 # CRUISING300, 200 MM
 class HydroGen:
@@ -42,7 +38,7 @@ class HydroGen:
     def __init__(self):
         self.pow_gen = []  # holds the last 1 minute of Readings
         self.pow_con = 0  # W, represents power consumed
-        self.manufacture_version = weighted(specs.VERSION_MAN, 1, p=[0.1, .9])[0]   # probability based on order date
+        self.manufacture_version = weighted(specs.VERSION_MAN, 1, p=[0.1, .9])[0]  # probability based on order date
         self.LEDS = {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}  # must be flashed
         self.can_address = 0  # must be flashed
         self.firmware_version = 0  # must be flashed
@@ -58,7 +54,6 @@ class HydroGen:
         self.can_address = specs.CAN_ADDRESS
         self.firmware_version = specs.VERSION_PROP[self.manufacture_version]
 
-        
     def turn_on(self):
         self.pow_con = specs.POWER_CONSUMED
         self.LEDS[specs.CONVERTER] = specs.RED if self.voltage_spike else specs.GREEN
@@ -85,7 +80,7 @@ class HydroGen:
             reading = Reading(ffit, now)
 
         reading.power *= specs.FACTOR_DICT[self.manufacture_version]
-            
+
         self.record_pow(reading)
         return reading
 
@@ -115,7 +110,6 @@ class HydroGen:
         else:
             x.power /= specs.FACTOR_DICT[self.manufacture_version]
             return x
-
 
     def set_LED(self, color, loc):  # sets LED colors on board and converter
         if color is not specs.RED and color is not specs.GREEN:

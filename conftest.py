@@ -5,16 +5,18 @@ from simulation import HydroGen
 NUM_SAMPLES = 100
 
 
-def setup():
+def setup(weekday):
     DUT = HydroGen()  # device under test
     DUT.fix_board()
     DUT.flash()
+    DUT.battery.set_weekday(weekday)
+    DUT.battery.turn_on()
     DUT.turn_on()
-    DUT.battery.set_power(specs.MAX_BATT_LEVEL - 1)
     return DUT
 
 
-sample_population = [setup() for i in range(NUM_SAMPLES)]
+sample_population = [setup(specs.FRIDAY) for i in range(NUM_SAMPLES)]
+# sample_population = [setup(specs.MONDAY) for i in range(NUM_SAMPLES)]
 
 
 @pytest.fixture(scope="module", params=sample_population)
