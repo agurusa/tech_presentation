@@ -5,11 +5,11 @@ MAX = 60  # store a max of 60 seconds of power readings
 CAN_ADDRESS = 57
 
 # preloaded firmware versions
-OLD = 2.11
-NEW = 2.12
+OLD = 'old'
+NEW = 'new'
 VERSION_MAN = [OLD, NEW]  # manufacturer possibilities
-VERSION_PROP = {OLD: 4.2, NEW: 4.3}  # proprietary firmware version association
-FACTOR_DICT = {OLD: 1, NEW: 0.001}  # ratio difference between old and new firmware
+VERSION_PROP = {OLD: OLD, NEW: NEW}  # proprietary firmware version association
+FACTOR_DICT = {OLD: 1, NEW: .001}  # ratio difference between old and new firmware
 
 # Manufacturer specs
 X = [6.4, 5.5, 4.9, 4.4]  # knots
@@ -25,6 +25,12 @@ GREEN = 'green'
 BOARD = 'board'
 CONVERTER = 'converter'
 
+# Weekdays, and equivalent battery percentage
+MONDAY = 100
+TUESDAY = 90
+WEDNESDAY = 80
+THURSDAY = 55
+FRIDAY = 30
 
 # Conversions
 KNOT = 0.5144  # meters/second  # 80 W at 5.7 Knots

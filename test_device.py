@@ -1,24 +1,9 @@
-import pytest
-import datetime
-from time import sleep
-import statistics
 from threading import Thread
-
-import simulation as sim
+import pytest
 import specs
 
 RPM = 200  # standard RPM acquired by shop drill
-TEST_TIME = 10  # seconds to run the drill
 POW_SUCCESS = 20  # must generate at least this much power to be acceptable
-
-
-@pytest.fixture(scope="module")
-def hydrogen():
-    DUT = sim.HydroGen()  # device under test
-    DUT.flash()
-    DUT.turn_on()
-    DUT.battery.set_power(specs.MAX_BATT_LEVEL)  # set voltage level of external power source
-    return DUT
 
 
 def test_on(hydrogen):
@@ -27,32 +12,33 @@ def test_on(hydrogen):
 
 def test_flashed(hydrogen):
     assert hydrogen.can_address == specs.CAN_ADDRESS
-    assert hydrogen.firmware_version == specs.VERSION_PROP[hydrogen.manufacture_version]
+    assert hydrogen.firmware_version != 0
+    # assert hydrogen.firmware_version == specs.VERSION_PROP[hydrogen.manufacture_version]  # third major change
 
 
-
-def test_LEDs(hydrogen):
-    LEDs = hydrogen.get_LEDs()  # solicit the user
+def test_board_LED(hydrogen):
+    LEDs = hydrogen.get_LEDs()
     assert LEDs[specs.BOARD] == specs.GREEN
+
+
+def test_converter_LED(hydrogen):
+    LEDs = hydrogen.get_LEDs()
     assert LEDs[specs.CONVERTER] == specs.GREEN
 
 
+def test_LEDS_match(hydrogen):
+    LEDs = hydrogen.get_LEDs()
+    assert LEDs[specs.BOARD] == LEDs[specs.CONVERTER]
+
+
 def test_pow_generated(hydrogen):
-    now = datetime.datetime.now()
-    end = now + datetime.timedelta(0, TEST_TIME)
     thread = start_drill(hydrogen)  # user begins spinning the generator
-    power_readings = []
-    delay = 1  # seconds
-    while now < end:
-        sleep(delay)
-        power_readings += [p.power for p in hydrogen.get_pow(delay)]
-        now = datetime.datetime.now()
     thread.join()
-    if sim.EXCEPT_POW in power_readings:
-        assert pytest.fail(sim.EXCEPT_POW)
+    av_pow = hydrogen.get_pow(-1)[0].power
+    if isinstance(av_pow, str):
+        pytest.fail(av_pow)
     else:
-        av_pow = statistics.mean(power_readings)
-        assert (av_pow >= POW_SUCCESS)
+        assert av_pow >= POW_SUCCESS
 
 
 def start_drill(_hydrogen):
@@ -62,13 +48,7 @@ def start_drill(_hydrogen):
 
 
 def run_drill(_hydrogen):
-    now = datetime.datetime.now()
-    end = now + datetime.timedelta(0, TEST_TIME)
-    delay = 0.05  # hydrogen records at 20 Hz
-    while now < end:
-        _hydrogen.generate(RPM)
-        sleep(delay)
-        now = datetime.datetime.now()
+    _hydrogen.generate(RPM)
 
 
 def test_off(hydrogen):

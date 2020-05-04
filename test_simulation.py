@@ -15,14 +15,13 @@ def simHG():
 def test_flash(simHG):
 
     simHG.manufacture_version = specs.OLD
-    simHG.flash()
+    simHG.flash(firmware_change=True)
     assert simHG.firmware_version == specs.VERSION_PROP[specs.OLD]
     assert simHG.can_address == specs.CAN_ADDRESS
 
     simHG.manufacture_version = specs.NEW
-    simHG.flash()
+    simHG.flash(firmware_change=True)
     assert simHG.firmware_version == specs.VERSION_PROP[specs.NEW]
-
 
 
 def test_power_on(simHG):
@@ -33,12 +32,6 @@ def test_power_on(simHG):
 
     assert LED_converter == specs.RED if simHG.voltage_spike else LED_converter == specs.GREEN
     assert LED_board == specs.RED if simHG.voltage_oscillation else LED_board == specs.GREEN
-
-
-def test_power_off(simHG):
-    simHG.turn_on()
-    simHG.turn_off()
-    assert simHG.pow_con == 0
 
 
 def test_power_off(simHG):
@@ -64,11 +57,12 @@ def test_get_pow(simHG):
         assert sim.EXCEPT_OFF in str(exc.value)
 
     simHG.turn_on()
+    simHG.flash(firmware_change=True)
     simHG.set_LED(specs.GREEN, specs.CONVERTER)
     simHG.set_LED(specs.GREEN, specs.BOARD)
     _ = simHG.generate(0)
 
-    simHG.battery.set_power(specs.MAX_BATT_LEVEL - 1)
+    simHG.battery.turn_on(specs.MAX_BATT_LEVEL)
     rpm = specs.knots_to_rpm(AV_SPEED)
     _ = simHG.generate(rpm)
 
@@ -124,7 +118,7 @@ def test_generate_green_and_low(simHG):
     simHG.turn_on()
     simHG.set_LED(specs.GREEN, specs.CONVERTER)
     simHG.set_LED(specs.GREEN, specs.BOARD)
-    simHG.battery.power = specs.MAX_BATT_LEVEL - 1
+    simHG.battery.power = specs.MAX_BATT_LEVEL
     rpm = specs.knots_to_rpm(AV_SPEED)
     reading = simHG.generate(rpm)
     scaled_pow = AV_POW * specs.FACTOR_DICT[simHG.manufacture_version]

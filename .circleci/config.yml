@@ -1,0 +1,30 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.3.0
+
+jobs:
+  build-and-test:
+    executor: python/default
+    steps:
+      - checkout
+      - python/load-cache
+      - python/install-deps
+      - python/save-cache
+      - run:
+          command: |
+            mkdir test-results
+            python -m py.test --junitxml=test-results/junit.xml --testver=3 --testround=2
+          name: Test
+
+
+      - store_test_results:
+          path: test-results
+
+      - store_artifacts:
+          path: test-results
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
