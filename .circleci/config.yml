@@ -13,7 +13,10 @@ jobs:
       - python/save-cache
       - run:
           command: python -m py.test
+          mkdir test-results
+          pytest --junitxml=test-results/junit.xml
           name: Test
+
 
       - store_test_results:
           path: test-results
