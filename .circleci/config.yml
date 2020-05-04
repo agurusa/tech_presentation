@@ -12,9 +12,9 @@ jobs:
       - python/install-deps
       - python/save-cache
       - run:
-          command: python -m py.test
-          mkdir test-results
-          pytest --junitxml=test-results/junit.xml
+          command: |
+            mkdir test-results
+            python -m py.test --junitxml=test-results/junit.xml
           name: Test
 
 
