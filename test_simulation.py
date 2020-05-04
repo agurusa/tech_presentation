@@ -8,121 +8,124 @@ AV_POW = 80  # W
 
 
 @pytest.fixture
-def simulation():
+def simHG():
     return sim.HydroGen()
 
 
-def test_flash(simulation):
+def test_flash(simHG):
 
-    simulation.manufacture_version = specs.OLD
-    simulation.flash()
-    assert simulation.firmware_version == specs.VERSION_PROP[specs.OLD]
-    assert simulation.can_address == specs.CAN_ADDRESS
+    simHG.manufacture_version = specs.OLD
+    simHG.flash()
+    assert simHG.firmware_version == specs.VERSION_PROP[specs.OLD]
+    assert simHG.can_address == specs.CAN_ADDRESS
 
-    simulation.manufacture_version = specs.NEW
-    simulation.flash()
-    assert simulation.firmware_version == specs.VERSION_PROP[specs.NEW]
-
-
-
-def test_power_on(simulation):
-    simulation.turn_on()
-    assert simulation.pow_con == specs.POWER_CONSUMED
-
-    LED_board, LED_converter = (simulation.LEDS[specs.BOARD], simulation.LEDS[specs.CONVERTER])
-
-    assert LED_converter == specs.RED if simulation.voltage_spike else LED_converter == specs.GREEN
-    assert LED_board == specs.RED if simulation.voltage_oscillation else LED_board == specs.GREEN
+    simHG.manufacture_version = specs.NEW
+    simHG.flash()
+    assert simHG.firmware_version == specs.VERSION_PROP[specs.NEW]
 
 
-def test_power_off(simulation):
-    simulation.turn_on()
-    simulation.turn_off()
-    assert simulation.pow_con == 0
 
-def test_power_off(simulation):
-    simulation.turn_on()
-    simulation.turn_off()
-    assert simulation.pow_con == 0
+def test_power_on(simHG):
+    simHG.turn_on()
+    assert simHG.pow_con == specs.POWER_CONSUMED
+
+    LED_board, LED_converter = (simHG.LEDS[specs.BOARD], simHG.LEDS[specs.CONVERTER])
+
+    assert LED_converter == specs.RED if simHG.voltage_spike else LED_converter == specs.GREEN
+    assert LED_board == specs.RED if simHG.voltage_oscillation else LED_board == specs.GREEN
+
+
+def test_power_off(simHG):
+    simHG.turn_on()
+    simHG.turn_off()
+    assert simHG.pow_con == 0
+
+
+def test_power_off(simHG):
+    simHG.turn_on()
+    simHG.turn_off()
+    assert simHG.pow_con == 0
 
 
 def test_conversion():
     av_speed = 5.7  # knots
-    rpm = sim.knots_to_rpm(av_speed)
-    knots = sim.rpm_to_knots(rpm)
+    rpm = specs.knots_to_rpm(av_speed)
+    knots = specs.rpm_to_knots(rpm)
     assert av_speed == knots
 
 
-def test_get_pow(simulation):
+def test_get_pow(simHG):
     with pytest.raises(Exception) as exc:
-        simulation.get_pow(specs.MAX + 1)
+        _ = simHG.get_pow(specs.MAX + 1)
         assert sim.EXCEPT_MAXTIME in str(exc.value)
 
     with pytest.raises(Exception) as exc:
-        simulation.get_pow(10)
+        _ = simHG.get_pow(10)
         assert sim.EXCEPT_OFF in str(exc.value)
 
-    simulation.turn_on()
-    simulation.set_LED(specs.GREEN, specs.CONVERTER)
-    simulation.set_LED(specs.GREEN, specs.BOARD)
-    simulation.battery.set_power(specs.MAX_BATT_LEVEL - 1)
+    simHG.turn_on()
+    simHG.set_LED(specs.GREEN, specs.CONVERTER)
+    simHG.set_LED(specs.GREEN, specs.BOARD)
+    _ = simHG.generate(0)
 
-    first_reading = simulation.generate(0)
-    assert simulation.get_pow(10) == [first_reading]
+    simHG.battery.set_power(specs.MAX_BATT_LEVEL - 1)
+    rpm = specs.knots_to_rpm(AV_SPEED)
+    _ = simHG.generate(rpm)
 
-    rpm = sim.knots_to_rpm(AV_SPEED)
-    second_reading = simulation.generate(rpm)
-    assert simulation.get_pow(10) == [first_reading, second_reading]
+    simHG.set_LED(specs.RED, specs.CONVERTER)
+    _ = simHG.generate(rpm)
 
-    simulation.set_LED(specs.RED, specs.CONVERTER)
-    _ = simulation.generate(rpm)
-    assert sim.EXCEPT_POW == simulation.get_pow(10)[-1].power
+    actual = [r.power for r in simHG.get_pow(10)]
+    assert actual[0] == 0
+    assert actual[1] == pytest.approx(AV_POW, rel=0.5)
+    assert actual[2] == sim.EXCEPT_POW
 
 
-def test_set_LEDs(simulation):
+def test_set_LEDs(simHG):
     with pytest.raises(Exception) as exc:
-        simulation.set_LED('blue', specs.CONVERTER)
+        simHG.set_LED('blue', specs.CONVERTER)
         assert sim.EXCEPT_COLOR in str(exc.value)
 
     with pytest.raises(Exception) as exc:
-        simulation.set_LED(specs.GREEN, 'hull_computer')
+        simHG.set_LED(specs.GREEN, 'hull_computer')
         assert sim.EXCEPT_LOC in str(exc.value)
 
-    simulation.set_LED(specs.RED, specs.BOARD)
-    LEDs = simulation.get_LEDs()
+    simHG.set_LED(specs.RED, specs.BOARD)
+    LEDs = simHG.get_LEDs()
     assert LEDs[specs.BOARD] == specs.RED
 
-    simulation.set_LED(specs.GREEN, specs.CONVERTER)
-    LEDs = simulation.get_LEDs()
+    simHG.set_LED(specs.GREEN, specs.CONVERTER)
+    LEDs = simHG.get_LEDs()
     assert LEDs[specs.CONVERTER] == specs.GREEN
 
     
-def test_generate_red_LED(simulation):
-    simulation.turn_on()
-    simulation.set_LED(specs.RED, specs.CONVERTER)
-    simulation.set_LED(specs.GREEN, specs.BOARD)
-    rpm = simulation.knots_to_rpm(AV_SPEED)
-    reading1 = simulation.generate(rpm)
-    assert reading1.power == -1
+def test_generate_red_LED(simHG):
+    simHG.turn_on()
+    simHG.set_LED(specs.RED, specs.CONVERTER)
+    simHG.set_LED(specs.GREEN, specs.BOARD)
+    rpm = specs.knots_to_rpm(AV_SPEED)
+    reading1 = simHG.generate(rpm)
+    assert reading1.power < 0
     
-    simulation.set_LED(specs.RED, specs.BOARD)
-    rpm = simulation.knots_to_rpm(AV_SPEED)
-    reading2 = simulation.generate(rpm)
-    assert reading2.power == -1
+    simHG.set_LED(specs.RED, specs.BOARD)
+    rpm = specs.knots_to_rpm(AV_SPEED)
+    reading2 = simHG.generate(rpm)
+    assert reading2.power < 0
     
-def test_generate_high_bat(simulation):
-    simulation.turn_on()
-    simulation.set_LED(specs.GREEN, specs.CONVERTER)
-    simulation.set_LED(specs.GREEN, specs.BOARD)
-    rpm = simulation.knots_to_rpm(AV_SPEED)
-    reading = simulation.generate(rpm)
+def test_generate_high_bat(simHG):
+    simHG.turn_on()
+    simHG.set_LED(specs.GREEN, specs.CONVERTER)
+    simHG.set_LED(specs.GREEN, specs.BOARD)
+    rpm = specs.knots_to_rpm(AV_SPEED)
+    reading = simHG.generate(rpm)
     assert reading.power == 0
     
-def test_generate_green_and_low(simulation):
-    simulation.turn_on()
-    simulation.set_LED(specs.GREEN, specs.CONVERTER)
-    simulation.set_LED(specs.GREEN, specs.BOARD)
-    simulation.battery.power = specs.MAX_BATT_LEVEL - 1
-    rpm = simulation.knots_to_rpm(AV_SPEED)
-    reading = simulation.generate(rpm)
-    assert reading.power == pytest.approx(AV_POW, rel=0.5)
+def test_generate_green_and_low(simHG):
+    simHG.turn_on()
+    simHG.set_LED(specs.GREEN, specs.CONVERTER)
+    simHG.set_LED(specs.GREEN, specs.BOARD)
+    simHG.battery.power = specs.MAX_BATT_LEVEL - 1
+    rpm = specs.knots_to_rpm(AV_SPEED)
+    reading = simHG.generate(rpm)
+    scaled_pow = AV_POW * specs.FACTOR_DICT[simHG.manufacture_version]
+    assert reading.power == pytest.approx(scaled_pow, rel=0.5)

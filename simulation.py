@@ -6,10 +6,6 @@ from random import choice
 from numpy.random import choice as weighted
 import specs
 
-# conversion constants
-KNOT = 0.5144  # meters/second  # 80 W at 5.7 Knots
-PI = 3.14
-
 # exception strings
 EXCEPT_MAXTIME = 'Simulation does not record more than 60 seconds worth of data.'
 EXCEPT_OFF = 'Simulation is not "Powered on."'
@@ -17,20 +13,6 @@ EXCEPT_COLOR = f'Simulation does not support colors other than {specs.RED} OR {s
 EXCEPT_LOC = f'Simulation does not support LED locations other than {specs.BOARD} or {specs.CONVERTER}'
 EXCEPT_POW = 'Power reading cannot be parsed'
 EXCEPT_GEN = 'No readings have yet been generated.'
-
-
-# Conversions
-def rpm_to_knots(RPM):
-    meters_per_rotation = (specs.PROPELLER / 1000) * PI
-    rotations_per_second = RPM / 60
-    knots = 1 / KNOT * (meters_per_rotation * rotations_per_second)
-    return knots
-
-
-def knots_to_rpm(knots):
-    meters_per_rotation = (specs.PROPELLER / 1000) * PI
-    rpm = knots * KNOT / meters_per_rotation * 60
-    return rpm
 
 
 class Battery:
@@ -79,7 +61,6 @@ class HydroGen:
         self.LEDS[specs.CONVERTER] = specs.RED if self.voltage_spike else specs.GREEN
         self.LEDS[specs.BOARD] = specs.RED if self.voltage_oscillation else specs.GREEN
 
-
     def turn_off(self):
         self.pow_con = 0
 
@@ -87,23 +68,23 @@ class HydroGen:
         if not self.pow_con:
             raise Exception(EXCEPT_OFF)
 
+        now = dt.datetime.now()
+
         if specs.RED in self.LEDS.values():
-            reading = Reading(-1, dt.datetime.now())
+            reading = Reading(-1, now)
         elif not RPM:
-            reading = Reading(0, dt.datetime.now())
+            reading = Reading(0, now)
         elif self.battery.power >= specs.MAX_BATT_LEVEL:
-            reading = Reading(0, dt.datetime.now())
+            reading = Reading(0, now)
         else:
-            knots = rpm_to_knots(RPM)
+            knots = specs.rpm_to_knots(RPM)
             ffit = poly.polyval(knots, specs.COEFFS)
-            reading = Reading(ffit, dt.datetime.now())
-            
-        if self.manufacture_version == specs.NEW:
-            reading.power = reading.power * specs.FACTOR
+            reading = Reading(ffit, now)
+
+        reading.power *= specs.FACTOR_DICT[self.manufacture_version]
             
         self.record_pow(reading)
         return reading
-      
 
     def record_pow(self, reading):  # records the last 1 min of generated power
         if self.pow_gen:
@@ -121,15 +102,15 @@ class HydroGen:
             raise Exception(EXCEPT_MAXTIME)
 
         first = dt.datetime.now() - dt.timedelta(0, seconds)
-        return [self.parse(r) for r in self.pow_gen if r.timestamp >= first]
+        return [self.parse_power(r) for r in self.pow_gen if r.timestamp >= first]
 
-    def parse(self, r):
-        if r.power == -1:
-            return Reading(EXCEPT_POW, r.timestamp)
-        elif self.firmware_version == specs.VERSION_PROP[NEW]:
-            return r.power / specs.FACTOR
+    def parse_power(self, x):
+        if x.power < 0:
+            return Reading(EXCEPT_POW, x.timestamp)
         else:
-            return r
+            x.power /= specs.FACTOR_DICT[self.manufacture_version]
+            return x
+
 
     def set_LED(self, color, loc):  # sets LED colors on board and converter
         if color is not specs.RED and color is not specs.GREEN:

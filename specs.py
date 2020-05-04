@@ -9,7 +9,7 @@ OLD = 2.11
 NEW = 2.12
 VERSION_MAN = [OLD, NEW]  # manufacturer possibilities
 VERSION_PROP = {OLD: 4.2, NEW: 4.3}  # proprietary firmware version association
-FACTOR = 0.001  # ratio difference between old and new firmware
+FACTOR_DICT = {OLD: 1, NEW: 0.001}  # ratio difference between old and new firmware
 
 # Manufacturer specs
 X = [6.4, 5.5, 4.9, 4.4]  # knots
@@ -24,3 +24,21 @@ RED = 'red'
 GREEN = 'green'
 BOARD = 'board'
 CONVERTER = 'converter'
+
+
+# Conversions
+KNOT = 0.5144  # meters/second  # 80 W at 5.7 Knots
+PI = 3.14
+
+
+def rpm_to_knots(RPM):
+    meters_per_rotation = (PROPELLER / 1000) * PI
+    rotations_per_second = RPM / 60
+    knots = 1 / KNOT * (meters_per_rotation * rotations_per_second)
+    return knots
+
+
+def knots_to_rpm(knots):
+    meters_per_rotation = (PROPELLER / 1000) * PI
+    rpm = knots * KNOT / meters_per_rotation * 60
+    return rpm
