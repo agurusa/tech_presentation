@@ -16,10 +16,20 @@ def test_flashed(hydrogen):
     # assert hydrogen.firmware_version == specs.FIRMWARE_VERSION
     assert hydrogen.firmware_version == specs.VERSION_PROP[hydrogen.manufacture_version]
 
-def test_LEDs(hydrogen):
-    LEDs = hydrogen.get_LEDs()  # solicit the user
+
+def test_board_LED(hydrogen):
+    LEDs = hydrogen.get_LEDs()
     assert LEDs[specs.BOARD] == specs.GREEN
+
+
+def test_converter_LED(hydrogen):
+    LEDs = hydrogen.get_LEDs()
     assert LEDs[specs.CONVERTER] == specs.GREEN
+
+
+def test_LEDS_match(hydrogen):
+    LEDs = hydrogen.get_LEDs()
+    assert LEDs[specs.BOARD] == LEDs[specs.CONVERTER]
 
 
 def test_pow_generated(hydrogen):
