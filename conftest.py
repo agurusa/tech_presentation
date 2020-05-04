@@ -7,10 +7,11 @@ NUM_SAMPLES = 100
 
 def setup(weekday):
     DUT = HydroGen()  # device under test
-    DUT.fix_board()
-    DUT.flash()
-    DUT.battery.set_weekday(weekday)
-    DUT.battery.turn_on()
+    DUT.fix_board()  # first major change
+    DUT.flash(firmware_change=True)  # third major change
+    # DUT.flash()
+    # DUT.battery.turn_on(weekday)
+    DUT.battery.turn_on(specs.MAX_BATT_LEVEL)  # second major change
     DUT.turn_on()
     return DUT
 

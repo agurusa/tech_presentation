@@ -15,17 +15,12 @@ EXCEPT_GEN = 'No readings have yet been generated.'
 
 class Battery:
     def __init__(self):
-        self.weekday = specs.MONDAY
         self.power = 100  # percent
 
-    def turn_on(self, pow=None):
-        self.power = pow if pow else self.weekday
+    def turn_on(self, pow):  # second major change
+        self.power = pow
 
-    def set_weekday(self, weekday):
-        self.weekday = weekday
-
-
-# defines the structure used to record power generated
+# structure used to record power generated
 class Reading:
     def __init__(self, power, timestamp):
         self.power = power  # W
@@ -36,23 +31,27 @@ class Reading:
 class HydroGen:
 
     def __init__(self):
-        self.pow_gen = []  # holds the last 1 minute of Readings
-        self.pow_con = 0  # W, represents power consumed
+        self.pow_gen = []  # generated power (Readings)
+        self.pow_con = 0  # power consumed (W)
         self.manufacture_version = weighted(specs.VERSION_MAN, 1, p=[0.1, .9])[0]  # probability based on order date
-        self.LEDS = {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}  # must be flashed
-        self.can_address = 0  # must be flashed
-        self.firmware_version = 0  # must be flashed
+        self.LEDS = {specs.BOARD: specs.RED, specs.CONVERTER: specs.RED}
+        self.can_address = 0
+        self.firmware_version = 0
         self.battery = Battery()
         self.voltage_spike = choice([True, False])
         self.voltage_oscillation = choice([True, False])
 
-    def fix_board(self):
+    def fix_board(self):  # first major change
         self.voltage_spike = False
         self.voltage_oscillation = False
 
-    def flash(self):
+    def flash(self, firmware_change=False):
         self.can_address = specs.CAN_ADDRESS
-        self.firmware_version = specs.VERSION_PROP[self.manufacture_version]
+
+        if not firmware_change:  # third major change
+            self.firmware_version = specs.VERSION_PROP[specs.OLD]
+        else:
+            self.firmware_version = specs.VERSION_PROP[self.manufacture_version]
 
     def turn_on(self):
         self.pow_con = specs.POWER_CONSUMED
@@ -72,7 +71,7 @@ class HydroGen:
             reading = Reading(-1, now)
         elif not RPM:
             reading = Reading(0, now)
-        elif self.battery.power >= specs.MAX_BATT_LEVEL:
+        elif self.battery.power > specs.MAX_BATT_LEVEL:
             reading = Reading(0, now)
         else:
             knots = specs.rpm_to_knots(RPM)
@@ -80,20 +79,24 @@ class HydroGen:
             reading = Reading(ffit, now)
 
         reading.power *= specs.FACTOR_DICT[self.manufacture_version]
-
         self.record_pow(reading)
+
         return reading
 
     def record_pow(self, reading):  # records the last 1 min of generated power
         if self.pow_gen:
-            if reading.timestamp - self.pow_gen[0].timestamp < dt.timedelta(0, specs.MAX):
-                self.pow_gen.append(reading)
+            diff = dt.timedelta(0, specs.MAX)
+            if reading.timestamp - self.pow_gen[0].timestamp < diff:
+                self.add(reading)
             else:
-                while self.pow_gen and (reading.timestamp - self.pow_gen[0].timestamp >= dt.timedelta(0, specs.MAX)):
+                while self.pow_gen and (reading.timestamp - self.pow_gen[0].timestamp >= diff):
                     del self.pow_gen[0]
-                self.pow_gen.append(reading)
+                self.add(reading)
         else:
-            self.pow_gen.append(reading)
+            self.add(reading)
+
+    def add(self, pow):
+        self.pow_gen.append(pow)
 
     def get_pow(self, seconds):  # gets the recorded Readings for the last however many seconds
         if seconds > specs.MAX:
@@ -108,7 +111,7 @@ class HydroGen:
         if x.power < 0:
             return Reading(EXCEPT_POW, x.timestamp)
         else:
-            x.power /= specs.FACTOR_DICT[self.manufacture_version]
+            x.power /= specs.FACTOR_DICT[self.firmware_version]
             return x
 
     def set_LED(self, color, loc):  # sets LED colors on board and converter

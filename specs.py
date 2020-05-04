@@ -5,10 +5,10 @@ MAX = 60  # store a max of 60 seconds of power readings
 CAN_ADDRESS = 57
 
 # preloaded firmware versions
-OLD = 2.11
-NEW = 2.12
+OLD = 'old'
+NEW = 'new'
 VERSION_MAN = [OLD, NEW]  # manufacturer possibilities
-VERSION_PROP = {OLD: 4.2, NEW: 4.3}  # proprietary firmware version association
+VERSION_PROP = {OLD: OLD, NEW: NEW}  # proprietary firmware version association
 FACTOR_DICT = {OLD: 1, NEW: .001}  # ratio difference between old and new firmware
 
 # Manufacturer specs
