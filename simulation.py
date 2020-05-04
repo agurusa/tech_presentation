@@ -108,7 +108,7 @@ class HydroGen:
         if x.power < 0:
             return Reading(EXCEPT_POW, x.timestamp)
         else:
-            x.power /= specs.FACTOR_DICT[self.manufacture_version]
+            # x.power /= specs.FACTOR_DICT[self.manufacture_version]
             return x
 
     def set_LED(self, color, loc):  # sets LED colors on board and converter
