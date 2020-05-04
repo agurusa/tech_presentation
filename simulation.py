@@ -20,6 +20,7 @@ class Battery:
     def turn_on(self, pow):  # second major change
         self.power = pow
 
+
 # structure used to record power generated
 class Reading:
     def __init__(self, power, timestamp):
@@ -84,19 +85,11 @@ class HydroGen:
         return reading
 
     def record_pow(self, reading):  # records the last 1 min of generated power
-        if self.pow_gen:
-            diff = dt.timedelta(0, specs.MAX)
-            if reading.timestamp - self.pow_gen[0].timestamp < diff:
-                self.add(reading)
-            else:
-                while self.pow_gen and (reading.timestamp - self.pow_gen[0].timestamp >= diff):
-                    del self.pow_gen[0]
-                self.add(reading)
-        else:
-            self.add(reading)
+        diff = dt.timedelta(0, specs.MAX)
+        while self.pow_gen and (reading.timestamp - self.pow_gen[0].timestamp >= diff):
+            del self.pow_gen[0]
 
-    def add(self, pow):
-        self.pow_gen.append(pow)
+        self.pow_gen.append(reading)
 
     def get_pow(self, seconds):  # gets the recorded Readings for the last however many seconds
         if seconds > specs.MAX:

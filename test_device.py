@@ -3,7 +3,6 @@ import pytest
 import specs
 
 RPM = 200  # standard RPM acquired by shop drill
-TEST_TIME = 1  # seconds to run the drill
 POW_SUCCESS = 20  # must generate at least this much power to be acceptable
 
 
