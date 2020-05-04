@@ -50,6 +50,9 @@ class HydroGen:
         self.voltage_spike = choice([True, False])
         self.voltage_oscillation = choice([True, False])
 
+    def fix_board(self):
+        self.voltage_spike = False
+        self.voltage_oscillation = False
 
     def flash(self):
         self.can_address = specs.CAN_ADDRESS

@@ -7,6 +7,7 @@ NUM_SAMPLES = 100
 
 def setup():
     DUT = HydroGen()  # device under test
+    DUT.fix_board()
     DUT.flash()
     DUT.turn_on()
     DUT.battery.set_power(specs.MAX_BATT_LEVEL - 1)
