@@ -68,21 +68,3 @@ def hydrogen(request):
         VERSION3(DUT)
 
     return DUT
-
-# def pytest_addoption(parser):
-#     parser.addoption(
-#         "--testver",
-#         choices=['0', '1', '2', '3'],
-#         help='The version of the test you want to check'
-#     )
-#     parser.addoption(
-#         "--testround",
-#         choices=['1', '2'],
-#         help='The round of testing you are on'
-#     )
-
-
-# def pytest_generate_tests(metafunc):
-#     if 'hydrogen' in metafunc.fixturenames:
-#         metafunc.parametrize('hydrogen', devices(metafunc.config.getoption('testver'),
-#                                                  metafunc.config.getoption('testround')), scope='module')
