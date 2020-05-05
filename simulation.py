@@ -39,12 +39,14 @@ class HydroGen:
         self.can_address = 0
         self.firmware_version = 0
         self.battery = Battery()
-        self.voltage_spike = choice([True, False])
-        self.voltage_oscillation = choice([True, False])
-
-    def fix_board(self):  # first major change
         self.voltage_spike = False
         self.voltage_oscillation = False
+        self.fixed = False
+
+    def fix_board(self):  # first major change
+        self.fixed = True
+        self.voltage_oscillation = False
+        self.voltage_spike = False
 
     def flash(self, firmware_change=False):
         self.can_address = specs.CAN_ADDRESS
@@ -56,6 +58,12 @@ class HydroGen:
 
     def turn_on(self):
         self.pow_con = specs.POWER_CONSUMED
+        if not self.fixed:
+            if not self.voltage_spike:
+                self.voltage_spike = choice([True, False])
+            if not self.voltage_oscillation:
+                self.voltage_oscillation = choice([True, False])
+
         self.LEDS[specs.CONVERTER] = specs.RED if self.voltage_spike else specs.GREEN
         self.LEDS[specs.BOARD] = specs.RED if self.voltage_oscillation else specs.GREEN
 
