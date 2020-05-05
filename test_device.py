@@ -26,11 +26,6 @@ def test_converter_LED(hydrogen):
     assert LEDs[specs.CONVERTER] == specs.GREEN
 
 
-def test_LEDS_match(hydrogen):
-    LEDs = hydrogen.get_LEDs()
-    assert LEDs[specs.BOARD] == LEDs[specs.CONVERTER]
-
-
 def test_pow_generated(hydrogen):
     thread = start_drill(hydrogen)  # user begins spinning the generator
     thread.join()

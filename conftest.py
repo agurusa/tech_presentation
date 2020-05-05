@@ -5,14 +5,14 @@ import pytest
 
 NUM_SAMPLES = 100
 sample_pop = [HydroGen() for i in range(NUM_SAMPLES)]
-testversions = [0, 1, 2, 3]
-testdays = [specs.MONDAY, specs.FRIDAY]
+VERSIONS = [0, 1, 2, 3]
+DAYS = [specs.MONDAY, specs.FRIDAY]
 VERSION = 'testversion'
 DAY='testday'
 
 def setup():
     all = []
-    for t in testversions:
+    for t in VERSIONS:
         all += [(copy.deepcopy(device), {VERSION: t, DAY: specs.MONDAY}) for device in sample_pop]
         all += [(copy.deepcopy(device), {VERSION: t, DAY: specs.FRIDAY}) for device in sample_pop]
     return all
