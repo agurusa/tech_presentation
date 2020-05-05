@@ -63,8 +63,6 @@ class HydroGen:
                 self.voltage_spike = choice([True, False])
             if not self.voltage_oscillation:
                 self.voltage_oscillation = choice([True, False])
-            # self.voltage_spike = True if self.voltage_spike else choice([True, False])
-            # self.voltage_oscillation = True if self.voltage_oscillation else choice([True, False])
 
         self.LEDS[specs.CONVERTER] = specs.RED if self.voltage_spike else specs.GREEN
         self.LEDS[specs.BOARD] = specs.RED if self.voltage_oscillation else specs.GREEN

@@ -29,13 +29,14 @@ fig.suptitle('Test iterations')
 start = 0
 end = NUM_SAMPLES
 for x in range(TOTAL // NUM_SAMPLES):
+    ax = ax_arr[end // NUM_SAMPLES - 1]
+    ax.set_title(f'Version : {x//2}, Round: {x%2}')
     y_offset = np.zeros(NUM_SAMPLES)
     for i, t in enumerate(tests):
 
-        x = columns[start:end]
-        y = data[t][start:end]
-        ax = ax_arr[end//NUM_SAMPLES - 1]
-        ax.bar(x, y, label=t, bottom=y_offset)
+        data_x = columns[start:end]
+        data_y = data[t][start:end]
+        ax.bar(data_x, data_y, label=t, bottom=y_offset)
         y_offset += 1
 
     start += NUM_SAMPLES
